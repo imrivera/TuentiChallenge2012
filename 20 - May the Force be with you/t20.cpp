@@ -54,11 +54,18 @@ bool check_valid_aes_message(unsigned char* buffer, size_t size) {
 
     uint8_t padding = buffer[size-1];
     // The AES block size is 16 bytes
-    if (padding > 1 && padding < 16) {
+    if (padding >= 1 && padding <= 16) {
         valid = true;
         for (uint8_t i = 1; i < padding && valid; i++) {
-                if (buffer[size - 1 - i] != padding)
+                if (buffer[size - 1 - i] != padding) {
                     valid = false;
+                }
+        }
+
+        for (uint8_t i = 0; i < size - padding - 1 && valid; i++) {
+            if (!isprint(buffer[i])) {
+                valid = false;
+            }
         }
     }
 
