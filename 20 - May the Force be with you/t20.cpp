@@ -37,14 +37,9 @@ using namespace std;
 
 
 bool check_valid_game_message(unsigned char* buffer, size_t size) {
-    const string magic="& Puzzle=";
-    const char* p = magic.c_str();
+    const char magic[]=" & Puzzle=";
 
-    for (size_t i = 0; i < size - magic.size(); i++)
-        if (memcmp(p, buffer + i, magic.size()) == 0) 
-            return true;
-
-    return false;
+    return memcmp(magic, buffer + 20, sizeof(magic) - 1) == 0;
 }
 
 bool check_valid_aes_message(unsigned char* buffer, size_t size) {
@@ -62,7 +57,7 @@ bool check_valid_aes_message(unsigned char* buffer, size_t size) {
                 }
         }
 
-        for (uint8_t i = 0; i < size - padding - 1 && valid; i++) {
+        for (size_t i = 0; i < size - padding - 1 && valid; i++) {
             if (!isprint(buffer[i])) {
                 valid = false;
             }
@@ -76,7 +71,6 @@ bool check_valid_aes_message(unsigned char* buffer, size_t size) {
 void* thread_decode(void *arg) {
 
     uint32_t start = *((uint32_t*)arg);
-    uint64_t tid = (uint64_t) pthread_self();
 
     DES_key_schedule schedule;
     DES_cblock ascii_key;
@@ -101,7 +95,7 @@ void* thread_decode(void *arg) {
         DES_ecb_encrypt((DES_cblock*)(global_ciphertext) , (DES_cblock*)(buffer), &schedule, DES_DECRYPT);
 
         if (memcmp(buffer, "Key=", 4) == 0) {
-            for (int j = 8; j < global_ciphertext_size; j += 8) {
+            for (size_t j = 8; j < global_ciphertext_size; j += 8) {
                 DES_ecb_encrypt((DES_cblock*)(global_ciphertext + j), (DES_cblock*)(buffer + j), &schedule, DES_DECRYPT);
             }
 
